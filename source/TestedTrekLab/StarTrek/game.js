@@ -1,8 +1,33 @@
+class Weapon {
+
+    fire(game, ui){
+        if(_hasAmmo(game, ui)){
+
+        }
+    }
+    _hasAmmo() {
+        throw new Error("You must specify the derived method");
+    }
+}
+
+class Photon extends Weapon {
+    _hasAmmo(game, __unusedUI){
+        return game.torpedoes > 0;
+    }
+}
+
+class Phaser extends Weapon {
+    _hasAmmo(game, ui){
+        return game.power >= parseInt(ui.paramter("amount"), 10);
+    }
+}
+
 Game = function() {
-    this.e = 10000;
-    this.t = 8;
+    this.energy = 10000;
+    this.torpedoes = 8;
     this.maxPhaserRange = 4000;
 };
+
 
 Game.prototype = {
     generator: function() {
@@ -12,13 +37,45 @@ Game.prototype = {
         return Math.floor(this.generator() * n);
     },
     processCommand: function(ui) {
-        var enemy;
-        var distance;
-        var damage;
+        var enemy = ui.variable("target");
+        //var distance;
+        //var damage;
+
         if(ui.parameter("command") === "phaser") {
-            var amount = parseInt(ui.parameter("amount"), 10);
-            enemy = ui.variable("target");
-            if (this.e >= amount) {
+
+            this.phaserCommand(ui, enemy);
+            //extracted phaserCommand
+            
+        } else if(ui.parameter("command") === "photon") {
+            
+            this.photonCommand(ui, enemy);
+            //extracted photonCommand
+
+        }
+    },
+
+/*
+processCommand(ui) {
+    var enemy = ui.variable("target");
+    if (ui.parameter("command")) === "phaser"){
+        this.firePhasers(ui, enemy);
+    } else if (ui.parameter("command") === "photon") {
+        this.firePhotonTorpedoes(ui,enemey);
+    }
+    // fireweapon(ui, enemy, weapon)
+}
+
+
+
+*/
+
+
+
+
+    phaserCommand: function(ui, enemy) {
+        var amount = parseInt(ui.parameter("amount"), 10);
+           
+            if (this.energy >= amount) {
                 distance = enemy.distance;
                 if (distance > this.maxPhaserRange) {
                     ui.writeLine("Klingon out of range of phasers at " + distance + " sectors...");
@@ -36,13 +93,15 @@ Game.prototype = {
                         enemy.destroy();
                     }
                 }
-                this.e -= amount;
+                this.energy -= amount;
             } else {
                 ui.writeLine("Insufficient energy to fire phasers!");
             }
-        } else if(ui.parameter("command") === "photon") {
-            enemy = ui.variable("target");
-            if(this.t > 0) {
+    },
+
+    photonCommand: function(ui, enemy) {
+    
+            if(this.torpedoes > 0) {
                 distance = enemy.distance;
                 if ((this.randomWithinLimitOf(4) + ((distance / 500) + 1) > 7)) {
                     ui.writeLine("Torpedo missed Klingon at " + distance + " sectors...");
@@ -57,10 +116,10 @@ Game.prototype = {
                         enemy.destroy();
                     }
                 }
-                this.t--;
+                this.torpedoes--;
             } else {
                 ui.writeLine("No more photon torpedoes!");
             }
-        }
     }
+
 };
